@@ -1,8 +1,10 @@
 package com.zz9z9.blogcode.traffic.ratelimiter;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class RedisRateLimiter {
 
@@ -17,9 +19,12 @@ public class RedisRateLimiter {
         Long current = redisTemplate.opsForValue().increment(counterKey);
 
         if (current == null || current > maxConcurrent) {
+            log.warn("fail --> current count : {}, max : {}", current, maxConcurrent);
             redisTemplate.opsForValue().decrement(counterKey); // 롤백
             return false;
         }
+
+        log.info("success --> current count : {}, max : {}", current, maxConcurrent);
 
         return true;
     }
