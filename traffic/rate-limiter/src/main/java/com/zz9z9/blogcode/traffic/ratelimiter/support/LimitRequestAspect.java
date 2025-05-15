@@ -22,8 +22,6 @@ public class LimitRequestAspect {
 
     @Around("@annotation(com.zz9z9.blogcode.traffic.ratelimiter.LimitRequest)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.info("thread name :: {}", Thread.currentThread().getName());
-
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         LimitRequest limitRequest = method.getAnnotation(LimitRequest.class);
@@ -34,12 +32,16 @@ public class LimitRequestAspect {
         boolean acquired = redisRateLimiter.tryAcquire(requestId, count);
 
         if (!acquired) {
-            throw new RateLimitExceededException("Rate limit exceeded for " + requestId + ", thread : " + Thread.currentThread().getName());
+            throw new RateLimitExceededException("Rate limit exceeded for " + requestId);
         }
 
+        long start = System.currentTimeMillis();
         try {
             return joinPoint.proceed();
         } finally {
+            long end = System.currentTimeMillis();
+            long latency = end - start;
+            redisRateLimiter.updateLatency(requestId, latency);
             redisRateLimiter.release(requestId);
         }
     }
