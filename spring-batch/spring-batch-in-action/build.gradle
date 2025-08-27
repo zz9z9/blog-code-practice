@@ -13,7 +13,11 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-batch:3.5.5")
-    runtimeOnly "org.hsqldb:hsqldb"   // HyperSQL Database 추가
+//    runtimeOnly "org.hsqldb:hsqldb"   // HyperSQL Database 추가
+    runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 }
 
 test {

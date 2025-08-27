@@ -13,11 +13,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 
 @Configuration
-public class BatchConfiguration {
+public class JobConfiguration {
 
     @Bean
     public FlatFileItemReader<Person> reader() {
@@ -36,10 +37,10 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public JdbcBatchItemWriter<Person> writer(DataSource dataSource) {
+    public JdbcBatchItemWriter<Person> writer(DataSource mainDataSource) {
         return new JdbcBatchItemWriterBuilder<Person>()
                 .sql("INSERT INTO people (first_name, last_name) VALUES (:firstName, :lastName)")
-                .dataSource(dataSource)
+                .dataSource(mainDataSource)
                 .beanMapped()
                 .build();
     }
@@ -53,7 +54,7 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Step step1(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
+    public Step step1(JobRepository jobRepository, PlatformTransactionManager transactionManager,
                       FlatFileItemReader<Person> reader, PersonItemProcessor processor, JdbcBatchItemWriter<Person> writer) {
         return new StepBuilder("step1", jobRepository)
                 .<Person, Person>chunk(3, transactionManager)
