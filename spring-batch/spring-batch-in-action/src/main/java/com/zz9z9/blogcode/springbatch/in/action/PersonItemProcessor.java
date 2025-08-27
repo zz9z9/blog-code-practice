@@ -15,6 +15,9 @@ public class PersonItemProcessor implements ItemProcessor<Person, Person> {
         final String lastName = person.lastName().toUpperCase();
 
         final Person transformedPerson = new Person(firstName, lastName);
+//        if ("JUSTIN".equals(firstName)) {
+//            throw new RuntimeException("Error occurred while processing person: " + person);
+//        }
 
         log.info("Converting ({}) into ({})", person, transformedPerson);
 
