@@ -1,0 +1,20 @@
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: ${TOMCAT_THREADS_MAX:200}          # 기본값에서 시작한다. busy 가 여기 닿으면 그 회차는 버린다
+    keep-alive-timeout: ${KEEP_ALIVE_TIMEOUT:60000}
+    max-keep-alive-requests: ${MAX_KEEP_ALIVE_REQUESTS:100}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    tags:
+      application: upstream
+
+spring:
+  application:
+    name: upstream

@@ -1,0 +1,3 @@
+rootProject.name = 'http-connection-pool'
+include 'caller'
+include 'upstream'

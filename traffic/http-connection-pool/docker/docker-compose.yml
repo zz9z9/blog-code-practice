@@ -1,0 +1,97 @@
+# 전부 같은 브리지 네트워크에 둔다.
+# caller 만 호스트(macOS)에 두면 Docker VM 경계를 넘는 지연·지터가 재려는 값과 같은 크기가 된다.
+version: "2.4"
+
+services:
+  upstream:
+    image: eclipse-temurin:21-jre
+    working_dir: /app
+    volumes:
+      - ../upstream/build/libs/upstream-1.0-SNAPSHOT.jar:/app/app.jar:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    environment:
+      TOMCAT_THREADS_MAX: "${TOMCAT_THREADS_MAX:-200}"
+      KEEP_ALIVE_TIMEOUT: "${KEEP_ALIVE_TIMEOUT:-60000}"
+      MAX_KEEP_ALIVE_REQUESTS: "${MAX_KEEP_ALIVE_REQUESTS:-100}"
+      SERVER_TOMCAT_MBEANREGISTRY_ENABLED: "true"
+    cpus: 2
+    ports:
+      - "9081:8080"
+
+  # 4번(https) 전용. 같은 jar 를 TLS 로만 띄운다
+  upstream-tls:
+    image: eclipse-temurin:21-jre
+    working_dir: /app
+    volumes:
+      - ../upstream/build/libs/upstream-1.0-SNAPSHOT.jar:/app/app.jar:ro
+      - ./keystore.p12:/app/keystore.p12:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    environment:
+      SERVER_PORT: "8443"
+      SERVER_SSL_KEY_STORE: "/app/keystore.p12"
+      SERVER_SSL_KEY_STORE_PASSWORD: "changeit"
+      SERVER_SSL_KEY_STORE_TYPE: "PKCS12"
+      TOMCAT_THREADS_MAX: "${TOMCAT_THREADS_MAX:-200}"
+    cpus: 2
+
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.9.0
+    command: ["-host", "0.0.0.0", "-config", "/config/toxiproxy.json"]
+    volumes:
+      - ./toxiproxy.json:/config/toxiproxy.json:ro
+    cpus: 1
+    ports:
+      - "8474:8474"
+      - "8666:8666"
+
+  # upstream 의 netns 에 붙어 egress 지연을 건다.
+  # toxiproxy 의 latency toxic 은 데이터만 늦추므로 핸드셰이크 RTT 는 이쪽으로 건다.
+  netem:
+    image: alpine:3.20
+    network_mode: "service:upstream"
+    cap_add:
+      - NET_ADMIN
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache iproute2 >/dev/null
+        tc qdisc replace dev eth0 root netem delay ${NETEM_DELAY_MS:-0}ms
+        tc qdisc show dev eth0
+    depends_on:
+      - upstream
+
+  caller:
+    image: eclipse-temurin:21-jre
+    working_dir: /app
+    volumes:
+      - ../caller/build/libs/caller-1.0-SNAPSHOT.jar:/app/app.jar:ro
+    command: ["java", "-jar", "/app/app.jar"]
+    environment:
+      UPSTREAM_BASE_URL: "${UPSTREAM_BASE_URL:-http://upstream:8080}"
+      POOL_MAX_TOTAL: "${POOL_MAX_TOTAL:-50}"
+      POOL_MAX_PER_ROUTE: "${POOL_MAX_PER_ROUTE:-50}"
+      POOL_CONNECTION_REQUEST_TIMEOUT_MS: "${POOL_CONNECTION_REQUEST_TIMEOUT_MS:-3000}"
+      POOL_RESPONSE_TIMEOUT_MS: "${POOL_RESPONSE_TIMEOUT_MS:-10000}"
+      POOL_SOCKET_TIMEOUT_MS: "${POOL_SOCKET_TIMEOUT_MS:-10000}"
+      POOL_VALIDATE_AFTER_INACTIVITY_MS: "${POOL_VALIDATE_AFTER_INACTIVITY_MS:--1}"
+      POOL_EVICT_IDLE_MS: "${POOL_EVICT_IDLE_MS:--1}"
+      POOL_TIME_TO_LIVE_MS: "${POOL_TIME_TO_LIVE_MS:--1}"
+      POOL_RETRY_ENABLED: "${POOL_RETRY_ENABLED:-false}"
+      TOMCAT_THREADS_MAX: "${CALLER_TOMCAT_THREADS_MAX:-200}"
+      SERVER_TOMCAT_MBEANREGISTRY_ENABLED: "true"
+      LOGGING_LEVEL_ORG_APACHE_HC: "${LOGGING_LEVEL_ORG_APACHE_HC:-INFO}"
+    cpus: 2
+    ports:
+      - "9080:8080"
+    depends_on:
+      - toxiproxy
+      - upstream
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    cpus: 1
+    ports:
+      - "9090:9090"

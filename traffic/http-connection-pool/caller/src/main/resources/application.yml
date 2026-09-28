@@ -1,0 +1,34 @@
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: ${TOMCAT_THREADS_MAX:200}
+
+pool:
+  upstream-base-url: ${UPSTREAM_BASE_URL:http://localhost:9080}
+  # 0 이하 = 설정하지 않음 -> httpclient5 기본값 perRoute 5 / total 25
+  max-total: ${POOL_MAX_TOTAL:50}
+  max-per-route: ${POOL_MAX_PER_ROUTE:50}
+  # 음수 = 무한 대기
+  connection-request-timeout-ms: ${POOL_CONNECTION_REQUEST_TIMEOUT_MS:3000}
+  connect-timeout-ms: ${POOL_CONNECT_TIMEOUT_MS:2000}
+  response-timeout-ms: ${POOL_RESPONSE_TIMEOUT_MS:10000}
+  socket-timeout-ms: ${POOL_SOCKET_TIMEOUT_MS:10000}
+  # 음수 = 설정하지 않음 -> 매니저가 2초로 채운다
+  validate-after-inactivity-ms: ${POOL_VALIDATE_AFTER_INACTIVITY_MS:-1}
+  evict-idle-ms: ${POOL_EVICT_IDLE_MS:-1}
+  time-to-live-ms: ${POOL_TIME_TO_LIVE_MS:-1}
+  retry-enabled: ${POOL_RETRY_ENABLED:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  metrics:
+    tags:
+      application: caller
+
+spring:
+  application:
+    name: caller

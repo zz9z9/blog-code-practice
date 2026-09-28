@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 1s        # 기본 15s 면 pool.pending 같은 순간 지표가 뭉개진다
+  scrape_timeout: 1s
+
+scrape_configs:
+  - job_name: caller
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['caller:8080']
+  - job_name: upstream
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['upstream:8080']
