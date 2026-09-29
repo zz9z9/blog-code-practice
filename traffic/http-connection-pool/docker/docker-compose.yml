@@ -85,6 +85,13 @@ services:
     cpus: 2
     ports:
       - "9080:8080"
+    # 고갈 실험용. 기본값은 커널/도커 기본과 같게 둔다
+    sysctls:
+      net.ipv4.ip_local_port_range: "${PORT_RANGE:-32768 60999}"
+    ulimits:
+      nofile:
+        soft: ${NOFILE:-1048576}
+        hard: ${NOFILE:-1048576}
     depends_on:
       - toxiproxy
       - upstream
