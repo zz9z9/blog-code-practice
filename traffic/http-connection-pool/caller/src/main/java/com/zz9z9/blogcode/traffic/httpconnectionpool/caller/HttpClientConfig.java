@@ -85,6 +85,12 @@ public class HttpClientConfig {
                 .setConnectionManagerShared(true)
                 .setDefaultRequestConfig(requestConfig.build());
 
+        // 음수면 기본 전략(DefaultConnectionKeepAliveStrategy) 그대로 -> 서버의 Keep-Alive: timeout=N 을 따른다.
+        // 값을 주면 서버가 뭐라 하든 이 값으로 고정한다 (가설 13)
+        if (props.keepAliveMs() >= 0) {
+            TimeValue fixed = TimeValue.ofMilliseconds(props.keepAliveMs());
+            clientBuilder.setKeepAliveStrategy((response, context) -> fixed);
+        }
         if (!props.retryEnabled()) {
             clientBuilder.disableAutomaticRetries();   // 가설 10 — 기본값은 멱등 요청을 1회 재시도한다
         }

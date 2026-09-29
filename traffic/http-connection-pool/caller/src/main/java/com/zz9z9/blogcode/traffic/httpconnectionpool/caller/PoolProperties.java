@@ -18,6 +18,7 @@ public record PoolProperties(
         long validateAfterInactivityMs,
         long evictIdleMs,
         long timeToLiveMs,
+        long keepAliveMs,
         boolean retryEnabled
 ) {
 }

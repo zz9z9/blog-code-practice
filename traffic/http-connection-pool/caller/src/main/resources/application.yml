@@ -18,6 +18,8 @@ pool:
   validate-after-inactivity-ms: ${POOL_VALIDATE_AFTER_INACTIVITY_MS:-1}
   evict-idle-ms: ${POOL_EVICT_IDLE_MS:-1}
   time-to-live-ms: ${POOL_TIME_TO_LIVE_MS:-1}
+  # 음수 = 설정하지 않음 -> 서버의 Keep-Alive: timeout=N 을 따른다
+  keep-alive-ms: ${POOL_KEEP_ALIVE_MS:-1}
   retry-enabled: ${POOL_RETRY_ENABLED:false}
 
 management:

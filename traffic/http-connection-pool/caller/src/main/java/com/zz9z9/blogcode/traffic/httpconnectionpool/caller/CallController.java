@@ -29,6 +29,35 @@ public class CallController {
         return ResponseEntity.ok("ok");
     }
 
+    /**
+     * 요청 -> idleMs 만큼 쉼 -> 요청. 두 응답의 X-Peer(caller 소스 포트)가 같으면 커넥션을 재사용한 것이다.
+     * 유휴 시간을 서버가 광고한 Keep-Alive: timeout=N 의 앞뒤로 두면 풀이 그 말을 지키는지 보인다 (가설 13).
+     */
+    @GetMapping("/keepalive")
+    public ResponseEntity<String> keepAlive(@RequestParam(defaultValue = "1000") long idleMs)
+            throws IOException, InterruptedException {
+        String first = peer();
+        Thread.sleep(idleMs);
+
+        try {
+            String second = peer();
+            return ResponseEntity.ok("first=%s second=%s reused=%s".formatted(first, second, first.equals(second)));
+        } catch (IOException e) {
+            log.warn("두 번째 요청 실패", e);
+            return ResponseEntity.status(500)
+                    .body("first=%s second=%s: %s".formatted(first, e.getClass().getSimpleName(), e.getMessage()));
+        }
+    }
+
+    /** 한 번 호출하고 업스트림이 본 내 소스 포트를 돌려준다. */
+    private String peer() throws IOException {
+        HttpGet request = new HttpGet(props.upstreamBaseUrl() + "/echo");
+        try (CloseableHttpResponse response = httpClient.execute(request)) {
+            EntityUtils.consume(response.getEntity());
+            return response.getFirstHeader("X-Peer").getValue();
+        }
+    }
+
     @GetMapping("/call")
     public ResponseEntity<String> call(@RequestParam(defaultValue = "0") long delayMs,
                                        @RequestParam(defaultValue = "0") int sizeBytes,

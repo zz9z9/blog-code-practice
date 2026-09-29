@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity.BodyBuilder;
@@ -29,7 +30,8 @@ public class EchoController {
     public ResponseEntity<byte[]> echo(@RequestParam(defaultValue = "0") long delayMs,
                                        @RequestParam(defaultValue = "0") int sizeBytes,
                                        @RequestParam(defaultValue = "200") int status,
-                                       @RequestParam(defaultValue = "false") boolean close)
+                                       @RequestParam(defaultValue = "false") boolean close,
+                                       HttpServletRequest servletRequest)
             throws InterruptedException {
         if (delayMs > 0) {
             Thread.sleep(delayMs);   // 스레드는 점유, CPU 는 안 쓴다
@@ -40,7 +42,9 @@ public class EchoController {
         }
 
         BodyBuilder builder = ResponseEntity.status(status)
-                .header("X-Served", Long.toString(served.incrementAndGet()));
+                .header("X-Served", Long.toString(served.incrementAndGet()))
+                // caller 의 소스 포트. 두 요청의 값이 같으면 같은 TCP 커넥션이다 (가설 13)
+                .header("X-Peer", servletRequest.getRemoteAddr() + ":" + servletRequest.getRemotePort());
         if (close) {
             builder.header(HttpHeaders.CONNECTION, "close");   // 재시작 없이 keep-alive 만 끈다
         }
