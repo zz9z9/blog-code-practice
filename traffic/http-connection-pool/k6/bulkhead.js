@@ -1,5 +1,5 @@
 // 느린 업스트림을 부르는 API 와, 업스트림을 전혀 안 부르는 API 를 같이 때린다.
-// 풀 상한이 bulkhead 로 동작하면 뒤쪽은 멀쩡해야 한다.
+// 풀 상한이 격리로 동작하면 뒤쪽은 멀쩡해야 한다.
 import http from 'k6/http';
 import { Trend, Rate } from 'k6/metrics';
 

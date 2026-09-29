@@ -43,7 +43,7 @@ public class EchoController {
 
         BodyBuilder builder = ResponseEntity.status(status)
                 .header("X-Served", Long.toString(served.incrementAndGet()))
-                // caller 의 소스 포트. 두 요청의 값이 같으면 같은 TCP 커넥션이다 (가설 13)
+                // caller 의 소스 포트. 두 요청의 값이 같으면 같은 TCP 커넥션이다 (13번)
                 .header("X-Peer", servletRequest.getRemoteAddr() + ":" + servletRequest.getRemotePort());
         if (close) {
             builder.header(HttpHeaders.CONNECTION, "close");   // 재시작 없이 keep-alive 만 끈다

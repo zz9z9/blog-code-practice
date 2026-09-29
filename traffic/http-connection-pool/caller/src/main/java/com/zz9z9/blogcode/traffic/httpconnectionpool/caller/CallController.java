@@ -31,7 +31,7 @@ public class CallController {
 
     /**
      * 요청 -> idleMs 만큼 쉼 -> 요청. 두 응답의 X-Peer(caller 소스 포트)가 같으면 커넥션을 재사용한 것이다.
-     * 유휴 시간을 서버가 광고한 Keep-Alive: timeout=N 의 앞뒤로 두면 풀이 그 말을 지키는지 보인다 (가설 13).
+     * 유휴 시간을 서버가 알려준 Keep-Alive: timeout=N 의 앞뒤로 두면 풀이 그 말을 지키는지 보인다 (13번).
      */
     @GetMapping("/keepalive")
     public ResponseEntity<String> keepAlive(@RequestParam(defaultValue = "1000") long idleMs)

@@ -46,7 +46,7 @@ public class HttpClientConfig {
                 // 실습용 자체서명 인증서를 그대로 신뢰한다 (4번에서 https 를 재기 위한 것)
                 .setTlsSocketStrategy(new DefaultClientTlsStrategy(trustAll(), NoopHostnameVerifier.INSTANCE));
 
-        // 0 이하로 두면 builder 가 덮어쓰지 않는다 -> 라이브러리 기본값 perRoute 5 / total 25 (가설 2)
+        // 0 이하로 두면 builder 가 덮어쓰지 않는다 -> 라이브러리 기본값 perRoute 5 / total 25 (2번)
         if (props.maxTotal() > 0) {
             builder.setMaxConnTotal(props.maxTotal());
         }
@@ -73,7 +73,7 @@ public class HttpClientConfig {
         RequestConfig.Builder requestConfig = RequestConfig.custom()
                 .setResponseTimeout(props.responseTimeoutMs(), TimeUnit.MILLISECONDS);
 
-        // 음수면 무한 대기 (가설 7 의 "포기가 없는" 쪽)
+        // 음수면 무한 대기 (7번의 "포기가 없는" 쪽)
         if (props.connectionRequestTimeoutMs() >= 0) {
             requestConfig.setConnectionRequestTimeout(props.connectionRequestTimeoutMs(), TimeUnit.MILLISECONDS);
         } else {
@@ -86,13 +86,13 @@ public class HttpClientConfig {
                 .setDefaultRequestConfig(requestConfig.build());
 
         // 음수면 기본 전략(DefaultConnectionKeepAliveStrategy) 그대로 -> 서버의 Keep-Alive: timeout=N 을 따른다.
-        // 값을 주면 서버가 뭐라 하든 이 값으로 고정한다 (가설 13)
+        // 값을 주면 서버가 뭐라 하든 이 값으로 고정한다 (13번)
         if (props.keepAliveMs() >= 0) {
             TimeValue fixed = TimeValue.ofMilliseconds(props.keepAliveMs());
             clientBuilder.setKeepAliveStrategy((response, context) -> fixed);
         }
         if (!props.retryEnabled()) {
-            clientBuilder.disableAutomaticRetries();   // 가설 10 — 기본값은 멱등 요청을 1회 재시도한다
+            clientBuilder.disableAutomaticRetries();   // 10번 — 기본값은 멱등 요청을 1회 재시도한다
         }
         if (props.evictIdleMs() >= 0) {
             clientBuilder.evictIdleConnections(TimeValue.ofMilliseconds(props.evictIdleMs()));

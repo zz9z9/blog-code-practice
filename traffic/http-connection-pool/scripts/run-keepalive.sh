@@ -4,7 +4,7 @@
 # 커넥션을 풀에 얼마나 둘지는 ConnectionKeepAliveStrategy 가 응답마다 정한다.
 # 기본 전략(KEEP_ALIVE_MS < 0)은 서버의 Keep-Alive: timeout=N 을 그대로 따르고,
 # 값을 주면 서버가 뭐라 하든 그 값으로 고정한다.
-# 톰캣은 5초(=timeout=5)로 광고하게 두고, 유휴 시간을 그 앞뒤로 둬서 갈리는 지점을 본다.
+# 톰캣은 5초(=timeout=5)로 알려주게 두고, 유휴 시간을 그 앞뒤로 둬서 갈리는 지점을 본다.
 set -e
 cd "$(dirname "$0")/.."
 KEEP_ALIVE="$1"; VALIDATE="$2"; IDLE="$3"
@@ -19,10 +19,10 @@ for i in $(seq 1 60); do
   sleep 1
 done
 
-# 톰캣이 실제로 뭐라고 광고하는지 먼저 확인한다 (클라가 Connection: keep-alive 를 보내야 붙는다)
+# 톰캣이 실제로 뭐라고 알려주는지 먼저 확인한다 (클라가 Connection: keep-alive 를 보내야 붙는다)
 ADV=$(docker exec docker_caller_1 sh -c \
   "curl -s -D - -o /dev/null -H 'Connection: keep-alive' http://upstream:8080/echo" \
-  | tr -d '\r' | grep -i '^Keep-Alive:' || echo "(광고 없음)")
+  | tr -d '\r' | grep -i '^Keep-Alive:' || echo "(알려주지 않음)")
 
 N=$(docker logs docker_caller_1 2>&1 | wc -l)
 BODY=$(curl -s -m 40 "http://localhost:9080/keepalive?idleMs=$((IDLE*1000))")

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 사용법: run-stale.sh <VALIDATE_MS> <RETRY_ENABLED> <IDLE_SEC>
 #
-# upstream(톰캣)은 Keep-Alive: timeout=60 을 광고한다. 클라이언트는 그 말을 믿는다.
+# upstream(톰캣)은 Keep-Alive: timeout=60 을 알려준다. 클라이언트는 그 말을 믿는다.
 # 그런데 경로 중간의 toxiproxy 가 그보다 먼저, 아무 통보 없이 커넥션을 끊는다.
 # 실제 LB·프록시가 idle timeout 으로 끊는 상황과 같은 모양이다.
 set -e
