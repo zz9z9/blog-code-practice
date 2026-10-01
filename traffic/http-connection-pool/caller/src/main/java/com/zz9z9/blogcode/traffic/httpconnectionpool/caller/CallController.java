@@ -96,7 +96,8 @@ public class CallController {
 
     /**
      * try-with-resources 로 닫기만 하고 본문에는 손을 안 댄다.
-     * 누수는 안 생기는데(leased 가 안 쌓인다) 커넥션이 풀로 돌아가지도 않는다 (15번).
+     * 재사용을 잃을 것 같은데 실제로는 반납된다 — ResponseEntityProxy.close() 가 남은 본문을 드레인하고
+     * releaseConnection() 까지 부르기 때문이다 (15번).
      */
     private ResponseEntity<String> closeOnly(HttpGet request) throws IOException {
         try (CloseableHttpResponse response = httpClient.execute(request)) {
