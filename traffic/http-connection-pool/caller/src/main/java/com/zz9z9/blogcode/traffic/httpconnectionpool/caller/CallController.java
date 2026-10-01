@@ -66,7 +66,11 @@ public class CallController {
                                        @RequestParam(defaultValue = "safe") String mode) throws IOException {
         HttpGet request = new HttpGet("%s/echo?delayMs=%d&sizeBytes=%d&status=%d&close=%s"
                 .formatted(props.upstreamBaseUrl(), delayMs, sizeBytes, status, close));
-        return "leaky".equals(mode) ? leaky(request) : safe(request);
+        return switch (mode) {
+            case "leaky" -> leaky(request);
+            case "closeonly" -> closeOnly(request);
+            default -> safe(request);
+        };
     }
 
     /**
@@ -87,6 +91,19 @@ public class CallController {
             return ResponseEntity.ok("upstream=200, " + body.length() + " bytes");
         } catch (ParseException e) {
             throw new IOException(e);
+        }
+    }
+
+    /**
+     * try-with-resources 로 닫기만 하고 본문에는 손을 안 댄다.
+     * 누수는 안 생기는데(leased 가 안 쌓인다) 커넥션이 풀로 돌아가지도 않는다 (15번).
+     */
+    private ResponseEntity<String> closeOnly(HttpGet request) throws IOException {
+        try (CloseableHttpResponse response = httpClient.execute(request)) {
+            int code = response.getCode();
+            return code >= 400
+                    ? ResponseEntity.status(502).body("upstream=" + code)
+                    : ResponseEntity.ok("upstream=" + code);
         }
     }
 
