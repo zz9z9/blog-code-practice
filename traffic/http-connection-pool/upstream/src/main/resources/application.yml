@@ -6,6 +6,10 @@ server:
     keep-alive-timeout: ${KEEP_ALIVE_TIMEOUT:60000}
     max-keep-alive-requests: ${MAX_KEEP_ALIVE_REQUESTS:100}
 
+# 응답에 Keep-Alive: timeout=N 을 붙일지. false 면 "자기 타임아웃을 안 알려주는 서버" 가 된다 (11번)
+lab:
+  keep-alive-response-header: ${KEEP_ALIVE_RESPONSE_HEADER:true}
+
 management:
   endpoints:
     web:
